@@ -1,0 +1,24 @@
+ARSIP - CATATAN LAMA, BUKAN PANDUAN AKTIF. Gunakan docs/firebase-setup.md.
+
+HDP LAUNDRY - Firebase setup
+
+Aktifkan Email/Password, buat Firestore dan Storage, lalu pilih project dengan `firebase use --add`.
+Deploy aturan Firestore dari root repository bila diperlukan:
+
+	firebase deploy --only firestore:rules
+
+Aplikasi tidak menggunakan Cloud Functions atau Firebase Admin SDK. Penambahan akun memakai Firebase Auth app kedua agar sesi Owner tetap aktif.
+
+Owner pertama dibuat melalui Firebase Console Authentication. Buat dokumen `users/{uid}` dengan
+field uid, name, email, phone, role="Owner", isActive=true. Owner membuat akun Petugas dari menu
+Kelola Akun. Pelanggan baru mendaftar sendiri melalui tombol "Daftar sebagai pelanggan" di halaman
+login; Firestore Rules membatasi profil baru ke UID Auth sendiri dengan role Pelanggan.
+
+Jalankan `flutter pub get`, lalu `flutter run`. Order hanya dibuat Owner/Petugas. Order baru mendapat
+counter HDP-001, HDP-002, ... dan status Antrean. Petugas memilih Cash/QRIS saat mengonfirmasi pembayaran.
+Omzet hanya menghitung pembayaran Lunas.
+
+Firestore Rules: `firestore.rules`. Deploy sebelum menguji akses multi-akun. Aplikasi tidak menyediakan
+foto profil. Data order lama tidak dihapus; data lokal SharedPreferences tidak dimigrasikan otomatis.
+Penghapusan akun dari aplikasi hanya menghapus profil Firestore; penghapusan user Firebase Auth lain
+memerlukan hak Admin dan tidak dilakukan.

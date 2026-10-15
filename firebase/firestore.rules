@@ -1,0 +1,162 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function profileExists() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isActive', true) == true;
+    }
+    function role() {
+      return profileExists()
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        : '';
+    }
+    function isOwner() { return role() == 'Owner'; }
+    function isStaff() { return role() == 'Petugas'; }
+    function canOperate() { return isOwner() || isStaff(); }
+    function orderCounterAdvanced() {
+      let counterPath = /databases/$(database)/documents/counters/orders;
+      return existsAfter(counterPath)
+        && (!exists(counterPath)
+          ? getAfter(counterPath).data.lastNumber >= 1
+          : (!get(counterPath).data.keys().hasAny(['lastNumber'])
+            ? getAfter(counterPath).data.lastNumber >= 1
+            : getAfter(counterPath).data.lastNumber > get(counterPath).data.lastNumber));
+    }
+
+    match /users/{userId} {
+      allow create: if isOwner()
+        && request.resource.data.uid == userId
+        && request.resource.data.keys().hasAll([
+          'uid', 'name', 'email', 'phone', 'role', 'isActive', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'uid', 'name', 'email', 'phone', 'address', 'role', 'isActive', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.email is string
+        && request.resource.data.phone is string
+        && request.resource.data.role == 'Petugas'
+        && request.resource.data.isActive == true
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.uid == userId
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.keys().hasAll([
+          'uid', 'name', 'email', 'phone', 'role', 'isActive', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'uid', 'name', 'email', 'phone', 'role', 'isActive', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.email is string
+        && request.resource.data.phone is string
+        && request.resource.data.role == 'Pelanggan'
+        && request.resource.data.isActive == true
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow read: if signedIn() && (request.auth.uid == userId || canOperate());
+      allow update: if signedIn() && request.auth.uid == userId
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name', 'email', 'pendingEmail', 'phone', 'address', 'updatedAt'
+        ]);
+      allow update: if isOwner() && request.auth.uid != userId
+        && resource.data.role in ['Petugas', 'Pelanggan']
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'role', 'name', 'phone', 'address', 'isActive', 'updatedAt'
+        ])
+        && request.resource.data.role in ['Pelanggan', 'Petugas'];
+      allow delete: if isOwner()
+        && request.auth.uid != userId
+        && resource.data.role in ['Petugas', 'Pelanggan'];
+    }
+
+    match /orders/{orderId} {
+      allow read: if profileExists()
+        && (canOperate() || resource.data.customerId == request.auth.uid);
+      function hasValidNewOrder() {
+        return request.resource.data.serviceId is string
+          && exists(/databases/$(database)/documents/services/$(request.resource.data.serviceId))
+          && request.resource.data.kg is number
+          && request.resource.data.kg > 0
+          && request.resource.data.price ==
+            get(/databases/$(database)/documents/services/$(request.resource.data.serviceId)).data.price
+          && request.resource.data.total == request.resource.data.kg * request.resource.data.price
+          && request.resource.data.paymentMethod == null
+          && request.resource.data.paymentStatus == 'Belum Dibayar'
+          && request.resource.data.laundryStatus == 'Antrean'
+          && request.resource.data.orderNumber == orderId
+          && !request.resource.data.keys().hasAny([
+            'amountPaid', 'paidAt', 'approvedBy', 'approvedByName'
+          ]);
+      }
+      allow create: if canOperate()
+        && request.resource.data.customerId is string
+        && exists(/databases/$(database)/documents/users/$(request.resource.data.customerId))
+        && get(/databases/$(database)/documents/users/$(request.resource.data.customerId)).data.role == 'Pelanggan'
+        && get(/databases/$(database)/documents/users/$(request.resource.data.customerId)).data.get('isActive', true) == true
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdByName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.name
+        && orderCounterAdvanced()
+        && hasValidNewOrder();
+      allow update: if isOwner()
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'paymentStatus', 'amountPaid', 'paidAt', 'approvedBy', 'approvedByName', 'paymentMethod'
+        ])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'customerId', 'customerName', 'customerEmail', 'serviceId', 'serviceName',
+          'kg', 'price', 'total', 'laundryStatus', 'due', 'note', 'updatedAt'
+        ])
+        && request.resource.data.laundryStatus in ['Antrean', 'Di Cuci', 'Siap Ambil', 'Selesai'];
+      allow update: if isStaff()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'laundryStatus', 'updatedAt', 'due', 'note'
+        ])
+        && request.resource.data.laundryStatus in ['Antrean', 'Di Cuci', 'Siap Ambil', 'Selesai'];
+      allow update: if isStaff()
+        && resource.data.get('paymentStatus', 'Belum Dibayar')
+          in ['Belum Dibayar', 'Menunggu Konfirmasi']
+        && request.resource.data.paymentStatus == 'Lunas'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'paymentStatus', 'amountPaid', 'paidAt', 'approvedBy', 'approvedByName', 'paymentMethod'
+        ])
+        && request.resource.data.amountPaid == resource.data.total
+        && request.resource.data.approvedBy == request.auth.uid
+        && request.resource.data.approvedByName ==
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.name
+        && request.resource.data.paymentMethod in ['Cash', 'QRIS']
+        && request.resource.data.paidAt == request.time;
+      allow delete: if isOwner()
+        || (isStaff() && resource.data.paymentStatus != 'Lunas');
+    }
+
+    match /services/{serviceId} {
+      allow read: if profileExists();
+      allow create, update, delete: if isOwner();
+    }
+
+    match /counters/{counterId} {
+      allow read: if canOperate() && counterId == 'orders';
+      allow create: if counterId == 'orders'
+        && canOperate()
+        && request.resource.data.lastNumber is int
+        && request.resource.data.lastNumber >= 1;
+      allow update: if counterId == 'orders'
+        && canOperate()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastNumber'])
+        && request.resource.data.lastNumber is int
+        && (!resource.data.keys().hasAny(['lastNumber'])
+          ? request.resource.data.lastNumber >= 1
+          : request.resource.data.lastNumber > resource.data.lastNumber);
+      allow delete: if false;
+    }
+  }
+}

@@ -1,0 +1,14 @@
+ARSIP - CATATAN LAMA, BUKAN STATUS APLIKASI TERKINI.
+
+PERUBAHAN HDP LAUNDRY - PILIH AKUN PELANGGAN
+
+Yang diubah:
+- Form Buat/Edit Pesanan petugas kini menyediakan dropdown akun pelanggan dari daftar akun Pelanggan yang tersimpan di data lokal aplikasi.
+- Saat dipilih, nama dan email pelanggan pada pesanan mengikuti akun yang dipilih.
+- Pelanggan melihat pesanan berdasarkan email akun yang sama, sesuai logika lokal yang sudah ada.
+
+BATASAN PENTING:
+- Ini hanya perbaikan pada alur lokal aplikasi. Login/registrasi dan data pesanan pada proyek ini masih menggunakan SharedPreferences, bukan Firebase Authentication/Cloud Firestore.
+- Karena itu pesanan belum tersinkron antar-HP dan daftar akun yang muncul adalah akun yang tersimpan di perangkat itu.
+- Firebase packages/config sudah ada, tetapi integrasi data dan aturan keamanan Firestore belum diterapkan.
+- Jangan gunakan ini sebagai aplikasi produksi multi-pengguna sampai migrasi Firebase Auth + Firestore dan Security Rules selesai.

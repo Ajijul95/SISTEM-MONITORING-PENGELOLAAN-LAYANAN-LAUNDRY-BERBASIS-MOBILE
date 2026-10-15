@@ -1,0 +1,44 @@
+name: hdp_laundry
+
+description: HDP Laundry - demo lengkap lokal tanpa Firebase
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  firebase_core: ^3.15.2
+  firebase_auth: ^5.7.0
+  cloud_firestore: ^5.6.12
+  shared_preferences: ^2.3.2
+  pdf: ^3.11.1
+  excel: ^4.0.6
+  path_provider: ^2.1.4
+  share_plus: ^10.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/logo_dalam_hdp.png
+    - assets/logo_laundry.png
+
+
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo_laundry.png"
+  min_sdk_android: 21

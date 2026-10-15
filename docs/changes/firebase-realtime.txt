@@ -1,0 +1,11 @@
+Perubahan versi integrasi Firebase:
+- Login dan registrasi pelanggan menggunakan Firebase Authentication email/password.
+- Profil pengguna tersimpan di Firestore users/{uid}; role default pendaftaran adalah Pelanggan.
+- Layanan tersimpan di Firestore services.
+- Pesanan tersimpan di Firestore orders dengan customerId = UID pelanggan.
+- Petugas/Owner dapat memilih akun pelanggan saat membuat pesanan.
+- Pesanan pelanggan diambil berdasarkan UID akun dan stream snapshots (realtime).
+- Status pesanan, daftar layanan, dan daftar pelanggan menggunakan Firestore snapshots.
+- Aturan keamanan tersedia di firebase/firestore.rules; harus dipublikasikan ke Firebase Console.
+- Akun demo dan data lokal SharedPreferences lama tidak dimigrasikan otomatis.
+- Akun Owner/Petugas harus dibuat dan diberi role oleh administrator melalui Firebase Console (petunjuk di docs/firebase-setup.md).

@@ -11,3 +11,4 @@ Untuk langkah menyiapkan role Owner/Petugas dan aturan Firestore, lihat `docs/fi
 
 ## Anggota Tim
 - Farhan Dwi Saputra (NIM 2401020013)
+-Bayu Adhndika (NIM 2401020011)

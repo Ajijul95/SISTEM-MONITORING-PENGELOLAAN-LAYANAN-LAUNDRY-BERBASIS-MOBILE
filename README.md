@@ -13,3 +13,4 @@ Untuk langkah menyiapkan role Owner/Petugas dan aturan Firestore, lihat `docs/fi
 - Farhan Dwi Saputra (2401020013)
 - Bayu Adhandika (2401020011)
 - Muhammad Al-Fikry Akbar (2401020031)
+- Nurul Syafika (2401020025)

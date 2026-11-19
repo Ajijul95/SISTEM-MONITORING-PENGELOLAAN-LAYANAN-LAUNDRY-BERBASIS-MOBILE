@@ -8,3 +8,6 @@ Aplikasi Flutter HDP LAUNDRY dengan Firebase Authentication (email/password) dan
 3. Jalankan `flutter pub get`, lalu `flutter run`.
 
 Untuk langkah menyiapkan role Owner/Petugas dan aturan Firestore, lihat `docs/firebase-setup.md`.
+
+## Anggota Tim
+- Farhan Dwi Saputra (NIM 2401020013)

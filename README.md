@@ -10,5 +10,6 @@ Aplikasi Flutter HDP LAUNDRY dengan Firebase Authentication (email/password) dan
 Untuk langkah menyiapkan role Owner/Petugas dan aturan Firestore, lihat `docs/firebase-setup.md`.
 
 ## Anggota Tim
-- Farhan Dwi Saputra (NIM 2401020013)
--Bayu Adhndika (NIM 2401020011)
+- Farhan Dwi Saputra (2401020013)
+- Bayu Adhandika (2401020011)
+- Muhammad Al-Fikry Akbar (2401020031)
